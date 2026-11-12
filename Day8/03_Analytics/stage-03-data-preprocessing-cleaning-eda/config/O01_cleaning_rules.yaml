@@ -48,7 +48,7 @@ outlier_detection:
     - "total_charges"
 
 temporal_alignment:
-  target_timezone: "UTC"
+  target_timezone: "UTC" # Coordinated Universal Time
   fill_strategy: "ffill" # Forward-fill to prevent look-ahead bias in time-series
   resample_frequency: "1D"
 
