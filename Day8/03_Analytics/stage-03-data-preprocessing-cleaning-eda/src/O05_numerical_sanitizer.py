@@ -42,6 +42,41 @@ class NumericalSanitizer:
         with open(self.config_path, "r", encoding="utf-8") as f:
             return yaml.safe_load(f).get("mathematical_sanitization", {})
 
+    def sanitize_infinities_and_nans(self, df: pd.DataFrame) -> pd.DataFrame:
+        """
+        Replaces infinite values (inf, -inf) with NaN (or default fallback values) 
+        across all numerical columns to prevent downstream training failures.
+        """
+        mask_inf = self.config.get("mask_inf_with_nan", True)
+        df_clean = df.copy()
+        
+        logger.info("Scanning for IEEE 754 infinity and NaN values in numerical columns...")
+        numeric_cols = df_clean.select_dtypes(include=[np.number]).columns
+
+        for col in numeric_cols:
+            inf_count = np.isinf(df_clean[col]).sum()
+            if inf_count > 0:
+                if mask_inf:
+                    df_clean[col] = df_clean[col].replace([np.inf, -np.inf], np.nan)
+                    logger.warning(f"Replaced {inf_count:,} infinite values with NaN in column '{col}'.")
+                else:
+                    default_val = self.config.get("zero_division_default", 0.0)
+                    df_clean[col] = df_clean[col].replace([np.inf, -np.inf], default_val)
+                    logger.warning(f"Replaced {inf_count:,} infinite values with default ({default_val}) in column '{col}'.")
+
+        return df_clean
+    
+    def safe_divide(self, numerator: pd.Series, denominator: pd.Series, default_val: float = 0.0) -> pd.Series:
+        """
+        Performs vector-safe division, substituting default values where 
+        the denominator is zero to prevent DivisionByZero exceptions.
+        """
+        denom_clean = denominator.replace(0, np.nan)
+        result = numerator / denom_clean
+        result = result.fillna(default_val)
+        return result
+
+
 if __name__ == "__main__":
     # Local test demonstration
     config_file = Path("config/O01_cleaning_rules.yaml")
@@ -53,6 +88,6 @@ if __name__ == "__main__":
     
     if config_file.exists():
         sanitizer = NumericalSanitizer(config_path=config_file)
-        # df_sanitized = sanitizer.sanitize_infinities_and_nans(sample_df)
+        df_sanitized = sanitizer.sanitize_infinities_and_nans(sample_df)
         print("\n[RESULT] Sanitized DataFrame Preview:")
-        # print(df_sanitized)
+        print(df_sanitized)
