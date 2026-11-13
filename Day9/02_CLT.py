@@ -60,3 +60,36 @@ plt.show()
 # Quick look at the DataFrame
 print("First 5 rows of our Sample Means DataFrame:")
 print(df_means.head())
+
+'''
+what is the differnce in CLT and [log1p, boxcox, yeo-jhonson]?
+CLT never changes original data, takes random mean from multiple groups and make a bell.
+others squish the outliers to fit inside the bell
+
+log1p : Rule :0 and +ve  only : x>=0 (e.g., website clicks, sales counts, customer spend).
+Box-cox : x >0
+yeo-jhonson : all  : (e.g., profit/loss statements, temperature changes, temperature anomalies).
+
+
+'''
+# ==============================================================================
+# RULE OF THUMB FOR CHOOSING A TRANSFORMER
+# ==============================================================================
+# 1. All numbers >= 0 and right-skewed?  --> Start with np.log1p()
+# 2. All numbers strictly > 0?           --> Try Box-Cox
+# 3. Mix of negative, zero, & positive?  --> Use Yeo-Johnson
+# ==============================================================================
+
+# ==============================================================================
+# CLT vs. POWER TRANSFORMATIONS: THE DIFFERENCE
+# ==============================================================================
+# 1. Central Limit Theorem (CLT)
+#    - What it is: A natural statistical law.
+#    - Action: Take random sample averages of size n >= 30.
+#    - Result: The *averages* form a bell curve, even if raw data is skewed.
+#
+# 2. Power Transformations (log1p, Yeo-Johnson)
+#    - What it is: A manual data preprocessing / feature engineering step.
+#    - Action: Apply math formulas to squash skewness in a specific column.
+#    - Result: The *raw data points themselves* become more normally distributed.
+# ==============================================================================
